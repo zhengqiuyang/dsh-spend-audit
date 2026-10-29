@@ -39,6 +39,8 @@ export interface Reconciliation {
   recomputed: number;
   /** Total self-reported by an in-process meter, when the log carries one. */
   selfReported?: number;
+  /** Which plugin:* record type the number came from. */
+  selfReportedBy?: string;
   /** selfReported − recomputed; present only when both sides exist. */
   delta?: number;
   /** |delta| / max(recomputed, epsilon). */
@@ -87,8 +89,8 @@ export function emptyLedger(): SpendLedger {
 export interface ReplayOptions {
   table: PriceTable;
   attribution?: ToolAttribution;
-  /** Seed a self-reported total for reconciliation (e.g. read from a meter plugin's record). */
-  selfReportedTotal?: number;
+  /** Seed a self-reported total + its emitting record type (from extractSelfReported). */
+  selfReported?: { total: number; source: string };
 }
 
 /**
@@ -100,7 +102,7 @@ export interface ReplayOptions {
  */
 export function replay(events: SessionEventLike[], options: ReplayOptions): SpendLedger {
   const ledger = emptyLedger();
-  ledger.reconciliation = { recomputed: 0, ...(options.selfReportedTotal !== undefined ? { selfReported: options.selfReportedTotal } : {}) };
+  ledger.reconciliation = { recomputed: 0, ...(options.selfReported !== undefined ? { selfReported: options.selfReported.total, selfReportedBy: options.selfReported.source } : {}) };
 
   let sawCompaction = false;
   // tool/call events arrive AFTER their assistant/message in the log (the
@@ -233,15 +235,21 @@ export function replay(events: SessionEventLike[], options: ReplayOptions): Spen
   return ledger;
 }
 
-/** Extract a self-reported total from plugin:* records in the log, when present. */
-export function extractSelfReported(events: SessionEventLike[]): number | undefined {
+/**
+ * Extract a self-reported total from plugin:* records in the log. Honesty
+ * first: ANY plugin:* record carrying a numeric total is accepted, and the
+ * emitting record type is returned alongside so reports can name their
+ * source. Last record wins (logs are append-only; later = newer).
+ */
+export function extractSelfReported(events: SessionEventLike[]): { total: number; source: string } | undefined {
+  let found: { total: number; source: string } | undefined;
   for (const event of events) {
     if (typeof event.type === 'string' && event.type.startsWith('plugin:')) {
-      const d = event.data as { kind?: string; total?: number } | undefined;
-      if (d?.kind === 'spend-meter-total' && typeof d.total === 'number') {
-        return d.total;
+      const d = event.data as { total?: number } | undefined;
+      if (d !== undefined && typeof d.total === 'number') {
+        found = { total: d.total, source: event.type };
       }
     }
   }
-  return undefined;
+  return found;
 }

@@ -5,8 +5,8 @@
  *
  *   dsh-spend-audit <session.jsonl> [--prices <dir>] [--self-reported <usd>] [--json]
  */
-import { readFile } from 'node:fs/promises';
 import { parseSessionLog } from '../lib/session-parse.js';
+import { loadSessionLog } from '../lib/load-log.js';
 import { replay, extractSelfReported } from '../lib/replay.js';
 import { loadPrices } from '../lib/prices.js';
 
@@ -31,24 +31,18 @@ if (logPath === undefined) {
 }
 
 let text;
+let compression;
 try {
-  text = await readFile(logPath, 'utf8');
+  ({ text, compression } = await loadSessionLog(logPath));
 } catch (e) {
   console.error(`cannot read ${logPath}: ${e.message}`);
   process.exit(1);
 }
-
-// transparent zstd support when the CLI detects compressed generations
-if (/\.zst$/i.test(logPath) && text.includes('\u28B5')) {
-  console.error('this generation is zstd-compressed; decompress first (zstd -d) or point at session.jsonl');
-  process.exit(1);
-}
-
 const parsed = parseSessionLog(text);
 const events = parsed.lines.map((l) => l.event);
-const self = selfReported ?? extractSelfReported(events);
+const selfRec = selfReported !== undefined ? { total: selfReported, source: '--self-reported flag' } : extractSelfReported(events);
 const { table } = await loadPrices({}, pricesDir);
-const ledger = replay(events, { table, selfReportedTotal: self });
+const ledger = replay(events, { table, selfReported: selfRec });
 
 const usd = (n) => `$${n.toFixed(4)}`;
 
@@ -60,7 +54,7 @@ if (json) {
 const lines = [];
 lines.push(`# Spend audit — session ${parsed.sessionId ?? '(unknown)'}`);
 lines.push('');
-lines.push(`- source: \`${logPath}\` (${parsed.eventCount} events, ${parsed.skipped.length} skipped)`);
+lines.push(`- source: \`${logPath}\` (${compression}, ${parsed.eventCount} events, ${parsed.skipped.length} skipped)`);
 lines.push(`- **recomputed total: ${usd(ledger.total)}** over ${ledger.calls.length} billed model call(s)`);
 if (ledger.callsWithoutUsage > 0) lines.push(`- ${ledger.callsWithoutUsage} call(s) carried no usage bucket (excluded, not zeroed)`);
 if (ledger.unpricedModels.length > 0) lines.push(`- ⚠ unpriced models (tokens counted, cost unknown): ${ledger.unpricedModels.join(', ')}`);

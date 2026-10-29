@@ -122,10 +122,11 @@ const PRICES_DIR = 'C:/Users/Admin/.zcode/workspace/default/dsh-spend-audit/pric
   assert.ok(selfReported !== undefined);
   const ledger = replay(p.lines.map((l) => l.event), {
     table: (await loadPrices({}, PRICES_DIR)).table,
-    selfReportedTotal: selfReported,
+    selfReported,
   });
   assert.ok(ledger.reconciliation.recomputed > 0);
   assert.ok(Math.abs(ledger.reconciliation.selfReported - 0.0015) < 1e-12);
+  assert.equal(ledger.reconciliation.selfReportedBy, 'plugin:spend-meter');
   assert.ok(typeof ledger.reconciliation.delta === 'number');
   ok('reconciliation: self-reported vs recomputed with delta');
 }

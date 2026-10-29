@@ -49,5 +49,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zhengqiuyang/dsh-spend-audit.git"
+  },
+  "dependencies": {
+    "fzstd": "^0.1.1"
   }
 }
