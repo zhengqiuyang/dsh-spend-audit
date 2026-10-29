@@ -1,0 +1,8 @@
+{"type":"session","version":4,"id":"sess-demo-1","createdAt":1791315715000,"cwd":"/tmp/proj","isSeeded":false,"delegationDepth":0}
+{"type":"turn/start","data":{"turn":1}}
+{"type":"request/header","data":{"header":{"config":{"provider":"deepseek-official","model":"deepseek-chat"},"tools":["bash","read"]},"reason":"initial"}}
+{"type":"assistant/message","data":{"turn":1,"step":1,"message":{"role":"assistant","content":[{"type":"tool-call","id":"call-1","name":"bash","arguments":"{\"command\":\"ls\"}"}],"source":{"kind":"model","provider":"deepseek-official","model":"deepseek-chat"},"id":"m1"},"usage":{"inputTokens":1500,"outputTokens":42,"cacheReadTokens":0,"reasoningTokens":28},"stream":[]},"surfaceOp":"append"}
+{"type":"tool/call","data":{"turn":1,"step":1,"callId":"call-1","name":"bash","arguments":"{\"command\":\"ls\"}"}}
+{"type":"tool/result","data":{"turn":1,"step":1,"message":{"role":"tool","source":{"kind":"tool","callId":"call-1"},"toolCallId":"call-1","content":[{"type":"text","text":"file.txt"}]}}}
+{"type":"assistant/message","data":{"turn":1,"step":2,"message":{"role":"assistant","content":[{"type":"text","text":"done"}],"source":{"kind":"model","provider":"deepseek-official","model":"deepseek-chat"},"id":"m2"},"usage":{"inputTokens":27,"outputTokens":9,"cacheReadTokens":1664},"stream":[]},"surfaceOp":"append"}
+{"type":"turn/end","data":{"turn":1}}

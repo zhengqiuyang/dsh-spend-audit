@@ -1,0 +1,21 @@
+{
+  "$comment": "Token prices per model, USD per 1M tokens. mirror of vendor price pages at time of commit; users may extend via config.prices. Tiers: input (uncached), output, cacheRead, cacheWrite; reasoningTokens are billed as output by DeepSeek, hence folded into output.",
+  "deepseek-chat": {
+    "input": 0.27,
+    "output": 1.1,
+    "cacheRead": 0.07,
+    "cacheWrite": 0.27
+  },
+  "deepseek-reasoner": {
+    "input": 0.55,
+    "output": 2.19,
+    "cacheRead": 0.14,
+    "cacheWrite": 0.55
+  },
+  "deepseek-v4-flash": {
+    "input": 0.27,
+    "output": 1.1,
+    "cacheRead": 0.07,
+    "cacheWrite": 0.27
+  }
+}
